@@ -1,0 +1,15 @@
+{{- if .Values.persistent.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    {{- include "valheim.labels" . | nindent 4 }}
+  name: {{ include "valheim.fullname" . }}
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.persistent.size }}
+  volumeMode: Filesystem
+{{- end }}

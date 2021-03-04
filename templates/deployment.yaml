@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "valheim.fullname" . }}
+  labels:
+    {{- include "valheim.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "valheim.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "valheim.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.persistent.enabled }}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "valheim.fullname" . }}
+        - name: lists
+          configMap:
+            name: {{ include "valheim.fullname" . }}-lists
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            {{- $svcPort1 := .Values.service.port }}
+            {{- $svcPort2 := add1 .Values.service.port }}
+            - containerPort: {{ $svcPort1 }}
+              protocol: UDP
+              name: valheim-{{ $svcPort1 }}
+            - containerPort: {{ $svcPort2 }}
+              protocol: UDP
+              name: valheim-{{ $svcPort2 }}
+          volumeMounts:
+            - name: lists
+              mountPath: /etc/valheim/
+          {{- if .Values.persistent.enabled }}
+            - name: data
+              mountPath: /var/valheim/
+          {{- end }}
+          env:
+            - name: CONFIGMAP
+              value: "True"
+            - name: SAVEDIR
+              value: "/var/valheim/"
+            - name: SERVER_NAME
+              value: {{ .Values.config.serverName | quote}}
+            - name: SERVER_PORT
+              value: {{ .Values.service.port | quote }}
+            - name: WORLD
+              value: {{ .Values.config.world | quote }}
+            - name: PUBLIC
+              value: {{ .Values.config.public | quote }}
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "valheim.fullname" . }}
+                  key: password
+          #livenessProbe:
+          #  httpGet:
+          #    path: /
+          #    port: http
+          #readinessProbe:
+          #  httpGet:
+          #    path: /
+          #    port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

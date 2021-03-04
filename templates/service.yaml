@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "valheim.fullname" . }}
+  labels:
+    {{- include "valheim.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    {{- $svcPort1 := .Values.service.port }}
+    {{- $svcPort2 := add1 .Values.service.port }}
+    - port: {{ $svcPort1 }}
+      targetPort: {{ $svcPort1 }}
+      protocol: UDP
+      name: valheim-{{ $svcPort1 }}
+    - port: {{ $svcPort2 }}
+      targetPort: {{ $svcPort2 }}
+      protocol: UDP
+      name: valheim-{{ $svcPort2 }}
+  selector:
+    {{- include "valheim.selectorLabels" . | nindent 4 }}

@@ -1,0 +1,63 @@
+# Default values for valheim.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Valheim server config
+config:
+  serverName: "My Server" # Name that'll be displayed in the global server list. (String)
+  world: "Dedicated" # The world that'll be loaded / created on server startup. (String)
+  password: "H3reTheYl1e" #The password to get into the server, must be 5 chars long. (String)
+  public: "0" # Whether to add the server to the global server list (Boolean: 1 or 0)
+
+image:
+  repository: localhost/valheim
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: LoadBalancer
+  port: 2456
+
+# enable to allow for persistent worlds 
+persistent:
+  enabled: false
+  size: 5G
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+   limits:
+     cpu: 500m
+     memory: 6Gi
+   requests:
+     cpu: 500m
+     memory: 4G
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# This isn't a stateless server, so adding more replicas will just start multiple different servers
+replicaCount: 1
